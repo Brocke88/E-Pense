@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:softec_app/presenttionlayer/dashboard/history.dart';
 import 'package:softec_app/state_management/cubit.dart';
 
 class dashboard_screen extends StatefulWidget {
@@ -83,7 +84,7 @@ class _dashboard_screenState extends State<dashboard_screen> with SingleTickerPr
           _buildNewRecordTab(),
 
           // TAB 2: STATS (Placeholder)
-          const Center(child: Text("Analytics Section")),
+          history_records(),
 
           // TAB 3: HISTORY (Placeholder)
           const Center(child: Text("History Logs")),
@@ -280,7 +281,8 @@ class _dashboard_screenState extends State<dashboard_screen> with SingleTickerPr
                 for(int i =0;i < 5; ++i){
                   // Future<SharedPreferences> _newPrefs = SharedPreferences.getInstance();
                   if(controllers[i].text.toString() != null){
-                    project_state().getLatestValues(i, controllers[i].text.toString());
+                    project_state().getLatestValues(i, controllers[i].text.toString(),
+                        controllers[i].text.toString());
                     setState(() {
 
                     });
