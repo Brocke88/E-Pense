@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:softec_app/presenttionlayer/dashboard/history.dart';
+import 'package:softec_app/presenttionlayer/dashboard/suggestions.dart';
 import 'package:softec_app/state_management/cubit.dart';
 
 class dashboard_screen extends StatefulWidget {
@@ -87,9 +88,8 @@ class _dashboard_screenState extends State<dashboard_screen> with SingleTickerPr
           history_records(),
 
           // TAB 3: HISTORY (Placeholder)
-          const Center(child: Text("History Logs")),
-        ],
-      ),
+          suggestions()
+    ]),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: Selectedindex,
         onTap: (int newindex) {
@@ -277,18 +277,37 @@ class _dashboard_screenState extends State<dashboard_screen> with SingleTickerPr
                 // foregroundColor: ,
                 backgroundColor: Color(0xff13095c),
               ),
-              onPressed: (){
-                for(int i =0;i < 5; ++i){
-                  // Future<SharedPreferences> _newPrefs = SharedPreferences.getInstance();
-                  if(controllers[i].text.toString() != null){
-                    project_state().getLatestValues(i, controllers[i].text.toString(),
-                        controllers[i].text.toString());
-                    setState(() {
+            onPressed: () async {
+              // Safety check: Ensure controllers list exists and has enough elements
+              if (controllers == null || controllers.isEmpty || controllers.length < 5) {
+                print('ERROR: controllers list is empty or too short. Length: ${controllers?.length ?? 0}');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Controllers not properly initialized!')),
+                );
+                return;
+              }
 
-                    });
+              for (int i = 0; i < controllers.length && i < 5; i++) { // Start from 0, safer bounds
+                TextEditingController controller = controllers[i];
+
+                // Double-check controller exists and has text
+                if (controller != null && controller.text.isNotEmpty) {
+                  try {
+                    project_state().getLatestValues(i + 1, controller.text, controller.text);
+                    // print('Success for index $i: ${project_state().historyRecords[i + 1]?.values}');
+                  } catch (e) {
+                    print('Error for index $i: $e');
                   }
+
+                  // Only call setState if needed (avoid unnecessary rebuilds)
+                  if (mounted) {
+                    setState(() {});
+                  }
+                } else {
+                  print('Skipping index $i: controller is null or empty');
                 }
-              },
+              }
+            },
             // onHover: ,
             // onFocusChange: ,
             child: Text('OK',

@@ -19,7 +19,7 @@ class _categories_RecordsState extends State<categories_Records> {
     final projectStateInstance = BlocProvider.of<project_state>(context);
     return Scaffold(
       body: ListView.builder(
-          itemCount: projectStateInstance.historyRecords[0].values.length,
+          itemCount: projectStateInstance.historyRecords[0]!.length,
           itemBuilder: (BuildContext context,int index){
             return Container(
               width: 500,
@@ -43,7 +43,7 @@ class _categories_RecordsState extends State<categories_Records> {
                     ),
                   ]
               ),child: Center(
-              child: Text(projectStateInstance.historyRecords[0].values.elementAt(index).toString(),
+              child: Text(projectStateInstance.historyRecords[0]!.elementAt(index).toString(),
                 style: TextStyle(
                   color: Colors.black,
                   fontSize:30,
