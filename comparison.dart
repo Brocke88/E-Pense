@@ -1,16 +1,15 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:softec_app/state_management/cubit.dart';
 
-class ChartsTab extends StatefulWidget {
-  const ChartsTab({super.key});
+class ComparisonResultsTab extends StatefulWidget {
+  const ComparisonResultsTab({super.key});
 
   @override
-  State<ChartsTab> createState() => _ChartsTabState();
+  State<ComparisonResultsTab> createState() => _ComparisonResultsTabState();
 }
 
-class _ChartsTabState extends State<ChartsTab> {
+class _ComparisonResultsTabState extends State<ComparisonResultsTab> {
   final project_state state = project_state();
 
   @override
@@ -39,7 +38,7 @@ class _ChartsTabState extends State<ChartsTab> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            SizedBox(height: 350, child: BarChart(_buildIncomeChart())),
+            SizedBox(height: 350, child: BarChart(_buildGoalsChart())),
           ],
         ),
       ),
@@ -49,19 +48,18 @@ class _ChartsTabState extends State<ChartsTab> {
     );
   }
 
-  BarChartData _buildIncomeChart() {
+  BarChartData _buildGoalsChart() {
     List<BarChartGroupData> bars = [];
-    dynamic history = state.historyRecords[1]; // Income data
+    dynamic history = state.historyRecords[3]; // Goals data
 
     if (history != null) {
       int x = 0;
       history.forEach((category, values) {
         bars.add(BarChartGroupData(
           x: x,
-          barRods: [
-           BarChartRodData(
+          barRods: [BarChartRodData(
             toY: values.length.toDouble(),
-            color: Colors.green,
+            color: Colors.blue,
             width: 35,
           )],
           showingTooltipIndicators: [0],
@@ -74,7 +72,7 @@ class _ChartsTabState extends State<ChartsTab> {
       maxY: 10,
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-          // tooltipBgColor: Colors.green.withOpacity(0.8),
+          // tooltipBgColor: Colors.blue.withOpacity(0.8),
           getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
             '${rod.toY.round()}',
             const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -86,8 +84,8 @@ class _ChartsTabState extends State<ChartsTab> {
           sideTitles: SideTitles(
             showTitles: true,
             getTitlesWidget: (value, meta) {
-              if (value == 0) return const Text('Income →');
-              return Text('Cat$value');
+              if (value == 0) return const Text('Goals →');
+              return const Text('Goal');
             },
           ),
         ),

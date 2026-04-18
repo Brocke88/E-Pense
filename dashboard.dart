@@ -1,44 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:softec_app/presenttionlayer/dashboard/history.dart';
 import 'package:softec_app/presenttionlayer/dashboard/suggestions.dart';
 import 'package:softec_app/state_management/cubit.dart';
 
-class dashboard_screen extends StatefulWidget {
-  const dashboard_screen({super.key});
+class DashboardScreen extends StatefulWidget { // ✅ PascalCase
+  const DashboardScreen({super.key});
 
   @override
-  State<dashboard_screen> createState() => _dashboard_screenState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _dashboard_screenState extends State<dashboard_screen> with SingleTickerProviderStateMixin{
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   late final TabController newTabController;
-  int Selectedindex = 0;
-  var controllers = List.generate(5, (int index){
-    return TextEditingController();
-  });
-
+  late List<TextEditingController> controllers; // ✅ Late + typed
+  final project_state projectState = project_state(); // ✅ Direct instance
 
   @override
   void initState() {
+    super.initState(); // ✅ super first
+    controllers = List.generate(5, (index) => TextEditingController()); // ✅ initState
     newTabController = TabController(length: 3, vsync: this);
-    super.initState();
+  }
+
+  @override
+  void dispose() {
+    for (var controller in controllers) controller.dispose(); // ✅ Memory safety
+    newTabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-
-    var string_cubit = BlocProvider.of<project_state>(context);
-
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(130), // Increased to fit title + tabs
+        preferredSize: const Size.fromHeight(130),
         child: AppBar(
           backgroundColor: const Color(0xff13095c),
           flexibleSpace: const FlexibleSpaceBar(
             title: Padding(
-              padding: EdgeInsets.only(bottom: 60), // Adjust title position
+              padding: EdgeInsets.only(bottom: 60),
               child: Text('E-Pense', style: TextStyle(color: Colors.white, fontSize: 33)),
             ),
             centerTitle: true,
@@ -46,280 +47,113 @@ class _dashboard_screenState extends State<dashboard_screen> with SingleTickerPr
           bottom: TabBar(
             controller: newTabController,
             tabs: const [
-              Tab(child: Text('New record',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize:15,
-                  // fontWeight: ,
-                  // fontFamily: ,
-                ),textAlign: TextAlign.center,
-                ),
-              ),
-              Tab(child: Text('History',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize:15,
-                  // fontWeight: ,
-                  // fontFamily: ,
-                  ),textAlign: TextAlign.center,
-                ),
-              ),
-              Tab(child: Text('suggestions',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize:15,
-                  // fontWeight: ,
-                  // fontFamily: ,
-                ),textAlign: TextAlign.center,
-              ),
-              ),
+              Tab(text: 'New Record'),
+              Tab(text: 'History'),
+              Tab(text: 'Suggestions'),
             ],
           ),
         ),
       ),
-      // --- THE CORE FIX: TabBarView ---
       body: TabBarView(
         controller: newTabController,
         children: [
-          // TAB 1: NEW RECORD
           _buildNewRecordTab(),
-
-          // TAB 2: STATS (Placeholder)
-          history_records(),
-
-          // TAB 3: HISTORY (Placeholder)
-          suggestions()
-    ]),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: Selectedindex,
-        onTap: (int newindex) {
-          setState(() => Selectedindex = newindex);
-        },
-        selectedItemColor: const Color(0xff13095c),
-        unselectedItemColor: Colors.blue,
-        items: const [
-          BottomNavigationBarItem(label: 'Dashboard', icon: Icon(Icons.dashboard_customize_sharp)),
-          BottomNavigationBarItem(label: 'Analytics', icon: Icon(Icons.bar_chart)),
-          BottomNavigationBarItem(label: 'Results', icon: Icon(Icons.table_chart)),
+          const history_records(),
+          const suggestions(),
         ],
       ),
     );
   }
 
-  // Extracted UI for the "New Record" Tab
   Widget _buildNewRecordTab() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              const Text('Add new income : ', style: TextStyle(fontSize: 18)),
-              const SizedBox(width: 70),
-              // CRITICAL: TextField MUST be in Expanded/Flexible inside a Row
-              SizedBox(
-                width: 150,
-                child: TextField(
-                  controller: controllers[0],
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.money),
-                    hintText: 'Enter amount',
-                    border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black45,
-                            width: 1.2
-                        )
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.black,
-                        width: 2
-                      )
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 14,
-          ),
-          Row(
-            children: [
-              const Text('Add new Expense : ', style: TextStyle(fontSize: 18)),
-              const SizedBox(width: 64),
-              // CRITICAL: TextField MUST be in Expanded/Flexible inside a Row
-              SizedBox(
-                width: 150,
-                child: TextField(
-                  controller: controllers[1],
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.money),
-                    hintText: 'Enter amount',
-                    border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black45,
-                            width: 1.2
-                        )
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black,
-                            width: 2
-                        )
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 14,
-          ),
-          Row(
-            children: [
-              const Text('Add new goal : ', style: TextStyle(fontSize: 18)),
-              const SizedBox(width: 98),
-              // CRITICAL: TextField MUST be in Expanded/Flexible inside a Row
-              SizedBox(
-                width: 150,
-                child: TextField(
-                  controller: controllers[2],
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.center_focus_strong),
-                    hintText: 'Enter purpose',
-                    border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black45,
-                            width: 1.2
-                        )
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black,
-                            width: 2
-                        )
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 14,
-          ),
-          Row(
-            children: [
-              const Text('Add new Expense : ', style: TextStyle(fontSize: 18)),
-              const SizedBox(width: 65),
-              // CRITICAL: TextField MUST be in Expanded/Flexible inside a Row
-              Expanded(
-                child: TextField(
-                  controller: controllers[3],
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.money),
-                    hintText: 'Enter amount',
-                    border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black45,
-                            width: 1.2
-                        )
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black,
-                            width: 2
-                        )
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 14,
-          ),
-          Row(
-            children: [
-              const Text('Add new Expense category: ', style: TextStyle(fontSize: 18)),
-              // const SizedBox(width: 8),
-              // CRITICAL: TextField MUST be in Expanded/Flexible inside a Row
-              Expanded(
-                child: TextField(
-                  controller: controllers[4],
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.category),
-                    hintText: 'Enter type',
-                    border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black45,
-                            width: 1.2
-                        )
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.black,
-                            width: 2
-                        )
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height:42),
-          TextButton(
-              onLongPress: (){
-
-              },
-              style: TextButton.styleFrom(
-                // foregroundColor: ,
-                backgroundColor: Color(0xff13095c),
-              ),
-            onPressed: () async {
-              // Safety check: Ensure controllers list exists and has enough elements
-              if (controllers == null || controllers.isEmpty || controllers.length < 5) {
-                print('ERROR: controllers list is empty or too short. Length: ${controllers?.length ?? 0}');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Controllers not properly initialized!')),
-                );
-                return;
-              }
-
-              for (int i = 0; i < controllers.length && i < 5; i++) { // Start from 0, safer bounds
-                TextEditingController controller = controllers[i];
-
-                // Double-check controller exists and has text
-                if (controller != null && controller.text.isNotEmpty) {
-                  try {
-                    project_state().getLatestValues(i + 1, controller.text, controller.text);
-                    // print('Success for index $i: ${project_state().historyRecords[i + 1]?.values}');
-                  } catch (e) {
-                    print('Error for index $i: $e');
-                  }
-
-                  // Only call setState if needed (avoid unnecessary rebuilds)
-                  if (mounted) {
-                    setState(() {});
-                  }
-                } else {
-                  print('Skipping index $i: controller is null or empty');
-                }
-              }
-            },
-            // onHover: ,
-            // onFocusChange: ,
-            child: Text('OK',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize:15,
-                // fontWeight: ,
-                // fontFamily: ,
-              ),textAlign: TextAlign.center,
-            ),
-          )
+          _buildInputRow('Income', Icons.account_balance_wallet, 0),
+          const SizedBox(height: 14),
+          _buildInputRow('Expense 1', Icons.payment, 1),
+          const SizedBox(height: 14),
+          _buildInputRow('Goal', Icons.flag, 2),
+          const SizedBox(height: 14),
+          _buildInputRow('saving', Icons.credit_card, 3),
+          const SizedBox(height: 14),
+          _buildInputRow('Category', Icons.category, 4),
+          const SizedBox(height: 42),
+          _buildSaveButton(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInputRow(String label, IconData icon, int index) {
+    return Row(
+      children: [
+        Text('$label: ', style: const TextStyle(fontSize: 18)),
+        const SizedBox(width: 20),
+        Expanded( // ✅ Flexible layout
+          child: TextField(
+            controller: controllers[index],
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: const Color(0xff13095c)),
+              hintText: 'Enter $label',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xff13095c), width: 2),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+        onLongPress: () {
+          for (var controller in controllers) controller.clear();
+          if (mounted) setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Fields cleared!')),
+          );
+        },
+        style: TextButton.styleFrom(
+          backgroundColor: const Color(0xff13095c),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        onPressed: () async {
+          print('🔥 SAVE PRESSED');
+          print('BEFORE: latestValues=${projectState.latestValues}');
+
+          for (int i = 0; i < 5; i++) {
+            if (controllers[i].text.isNotEmpty) {
+              await projectState.getLatestValues(i + 1, controllers[i].text, controllers[i].text);
+              print('✅ Saved ${i+1}: "${controllers[i].text}"');
+              controllers[i].clear();
+            }
+          }
+
+          await Future.delayed(const Duration(milliseconds: 200));
+
+          print('AFTER: latestValues=${projectState.latestValues}');
+          print('historyRecords=${projectState.historyRecords}');
+
+          if (mounted) {
+            setState(() {});
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('✅ Saved!'), backgroundColor: Colors.green),
+            );
+          }
+        },
+        child: const Text(
+          'SAVE ALL DATA',
+          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
