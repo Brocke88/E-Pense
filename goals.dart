@@ -1,59 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:softec_app/results/Causes.dart';
 
+import 'dart:async';
 import 'dart:io';
-import 'dart:convert';
 
-import 'package:softec_app/state_management/cubit.dart';
+import 'package:softec_app/results/Goal_Outcomes.dart';
+import 'package:softec_app/results/resultsComparison.dart';
 
-class Goals_Records extends StatefulWidget {
-  const Goals_Records({super.key});
+class results extends StatefulWidget {
+  const results({super.key});
 
   @override
-  State<Goals_Records> createState() => _Goals_RecordsState();
+  State<results> createState() => _resultsState();
 }
 
-class _Goals_RecordsState extends State<Goals_Records> {
+class _resultsState extends State<results> with 
+SingleTickerProviderStateMixin{
+  late final TabController newTabcontroller;
+  @override
+  void initState() {
+    newTabcontroller = TabController(
+      length: 3,vsync: this
+    );
+    // TODO: implement initState
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
-    final projectStateInstance = BlocProvider.of<project_state>(context);
     return Scaffold(
-      body: ListView.builder(
-          itemCount: projectStateInstance.historyRecords[2]!.length,
-          itemBuilder: (BuildContext context,int index){
-            return Container(
-              width: 500,
-              height: 200,
-              decoration: BoxDecoration(
-
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(10.0),
-                    bottomRight: Radius.circular(10.0),
-                  ),
-                  color: Colors.blue,
-                  // shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                        offset: Offset(0, 6),
-                        spreadRadius: 3,
-                        color:Color(0xff13095c)
-                    ),
-                    BoxShadow(
-
-                    ),
-                  ]
-              ),child: Center(
-              child: Text(projectStateInstance.historyRecords[2]!.elementAt(index).toString(),
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize:30,
-                  // fontWeight: ,
-                  // fontFamily: ,
-                ),textAlign: TextAlign.center,
-              ),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(130),
+        child: AppBar(
+          backgroundColor: const Color(0xff13095c),
+          flexibleSpace: const FlexibleSpaceBar(
+            title: Padding(
+              padding: EdgeInsets.only(bottom: 60),
+              child: Text('E-Pense', style: TextStyle(color: Colors.white, fontSize: 33)),
             ),
-            );
-          }),
+            centerTitle: true,
+          ),
+          bottom: TabBar(
+            controller: newTabcontroller,
+            tabs: const [
+              Tab(text: 'New Record'),
+              Tab(text: 'History'),
+              Tab(text: 'Suggestions'),
+            ],
+          ),
+        ),
+      ),
+      body: TabBarView(
+        controller: newTabcontroller,
+        children: [
+          Goals(),
+          Causes(),
+          comparisons(),
+        ],
+      ),
     );
   }
 }
