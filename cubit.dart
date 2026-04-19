@@ -10,7 +10,7 @@ class project_state extends Cubit<List<String>> {
   Map<int, List<String>> historyRecords = {};
 
   ProjectState() {
-  latestValues = List<String>.filled(6, '');  // Pre-allocate indices 0-5
+  latestValues = List<String>.filled(5, '');  // Pre-allocate indices 0-4
   historyRecords = <int, List<String>>{};          // Empty map
   }
 

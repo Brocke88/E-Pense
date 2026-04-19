@@ -3,29 +3,28 @@ import 'package:softec_app/presenttionlayer/dashboard/history.dart';
 import 'package:softec_app/presenttionlayer/dashboard/suggestions.dart';
 import 'package:softec_app/state_management/cubit.dart';
 
-class DashboardScreen extends StatefulWidget { // ✅ PascalCase
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
-    with SingleTickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
   late final TabController newTabController;
-  late List<TextEditingController> controllers; // ✅ Late + typed
-  final project_state projectState = project_state(); // ✅ Direct instance
+  late List<TextEditingController> controllers;
+  final project_state projectState = project_state();
 
   @override
   void initState() {
-    super.initState(); // ✅ super first
-    controllers = List.generate(5, (index) => TextEditingController()); // ✅ initState
+    super.initState();
+    controllers = List.generate(5, (index) => TextEditingController());
     newTabController = TabController(length: 3, vsync: this);
   }
 
   @override
   void dispose() {
-    for (var controller in controllers) controller.dispose(); // ✅ Memory safety
+    for (var controller in controllers) controller.dispose();
     newTabController.dispose();
     super.dispose();
   }
@@ -58,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         controller: newTabController,
         children: [
           _buildNewRecordTab(),
-          const history_records(),
+          const history_records(),  // ✅ Proper const widgets
           const suggestions(),
         ],
       ),
@@ -77,7 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           const SizedBox(height: 14),
           _buildInputRow('Goal', Icons.flag, 2),
           const SizedBox(height: 14),
-          _buildInputRow('saving', Icons.credit_card, 3),
+          _buildInputRow('Saving', Icons.savings, 3),
           const SizedBox(height: 14),
           _buildInputRow('Category', Icons.category, 4),
           const SizedBox(height: 42),
@@ -90,11 +89,15 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _buildInputRow(String label, IconData icon, int index) {
     return Row(
       children: [
-        Text('$label: ', style: const TextStyle(fontSize: 18)),
-        const SizedBox(width: 20),
-        Expanded( // ✅ Flexible layout
+        Expanded(
+          flex: 2,
+          child: Text('$label: ', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+        ),
+        Expanded(
+          flex: 3,
           child: TextField(
             controller: controllers[index],
+            keyboardType: TextInputType.number, // ✅ Numbers only
             decoration: InputDecoration(
               prefixIcon: Icon(icon, color: const Color(0xff13095c)),
               hintText: 'Enter $label',
@@ -103,7 +106,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Color(0xff13095c), width: 2),
               ),
+              filled: true,
+              fillColor: Colors.grey[50],
             ),
+            onChanged: (value) {
+              // ✅ Real-time validation
+              if (value.isNotEmpty && double.tryParse(value) == null) {
+                controllers[index].text = '';
+              }
+            },
           ),
         ),
       ],
@@ -113,48 +124,72 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
-      child: TextButton(
-        onLongPress: () {
-          for (var controller in controllers) controller.clear();
-          if (mounted) setState(() {});
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Fields cleared!')),
-          );
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          await _saveAllData();
         },
-        style: TextButton.styleFrom(
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text(
+          'SAVE',
+          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xff13095c),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        onPressed: () async {
-          print('🔥 SAVE PRESSED');
-          print('BEFORE: latestValues=${projectState.latestValues}');
-
-          for (int i = 0; i < 5; i++) {
-            if (controllers[i].text.isNotEmpty) {
-              await projectState.getLatestValues(i + 1, controllers[i].text, controllers[i].text);
-              print('✅ Saved ${i+1}: "${controllers[i].text}"');
-              controllers[i].clear();
-            }
-          }
-
-          await Future.delayed(const Duration(milliseconds: 200));
-
-          print('AFTER: latestValues=${projectState.latestValues}');
-          print('historyRecords=${projectState.historyRecords}');
-
-          if (mounted) {
-            setState(() {});
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('✅ Saved!'), backgroundColor: Colors.green),
-            );
-          }
-        },
-        child: const Text(
-          'SAVE ALL DATA',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          elevation: 4,
         ),
       ),
     );
+  }
+
+  Future<void> _saveAllData() async {
+    print('🔥 SAVING TO CUBIT...');
+    print('Input values:');
+    for (int i = 0; i < 5; i++) {
+      print('  Index ${i+1}: "${controllers[i].text}"');
+    }
+
+    // ✅ SAVE EACH INPUT TO CUBIT
+    for (int i = 0; i < 5; i++) {
+      String value = controllers[i].text.trim();
+      if (value.isNotEmpty) {
+        try {
+          // ✅ CRITICAL: Pass correct params to getLatestValues
+          await projectState.getLatestValues(
+            i + 1,        // index (1-5)
+            value,        // category
+            value,        // new_val
+          );
+          print('✅ SAVED Index ${i+1}: "$value"');
+        } catch (e) {
+          print('❌ ERROR Index ${i+1}: $e');
+        }
+      }
+    }
+
+    // ✅ Clear inputs after save
+    for (var controller in controllers) {
+      controller.clear();
+    }
+
+    // ✅ Refresh UI + Feedback
+    if (mounted) {
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ All data saved to cubit!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+
+    // ✅ Verify save
+    await Future.delayed(const Duration(milliseconds: 100));
+    print('\n📊 CUBIT AFTER SAVE:');
+    print('latestValues: ${projectState.latestValues}');
+    print('historyRecords keys: ${projectState.historyRecords.keys.toList()}');
+    print('historyRecords[1]: ${projectState.historyRecords[1]}');
   }
 }
